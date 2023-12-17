@@ -1,57 +1,46 @@
-from langchain.llms import OpenAI
-from langchain.prompts import PromptTemplate
+from langchain.chat_models import ChatOpenAI 
+from langchain.prompts import HumanMessagePromptTemplate, ChatPromptTemplate, MessagesPlaceholder
 from langchain.chains import LLMChain, SequentialChain
 from dotenv import load_dotenv
-from langchain.memory import ConversationBufferemory
+from langchain.memory import ConversationBufferMemory, ConversationSummaryMemory, FileChatMessageHistory
 
 
 load_dotenv()
 # API key will be read from environment file
-llm = OpenAI()
+chat = ChatOpenAI(verbose = True)
 
 
-code_prompt = PromptTemplate(
-    template = "Write a very short {language} function that will {task} ",
-    input_variables = ["language", "task"]
+memory = ConversationBufferMemory (
+    chat_memory = FileChatMessageHistory("messages.json"), # can be saved in database any other also
+    memory_key = "messages",
+    return_messages= True
 )
 
-code_chain = LLMChain(
-    llm = llm,
-    prompt = code_prompt,
-    output_key = "code"
+
+# memory = ConversationSummaryMemory (
+#     memory_key = "messages",
+#     return_messages= True,
+#     llm = chat  # to generate the summary, we can use any other model also here
+# )
+
+prompt = ChatPromptTemplate(
+    input_variables = ["content", "messages"],
+    messages = [
+        MessagesPlaceholder(variable_name="messages"), #search for key "messages" to find the earlier messages
+        HumanMessagePromptTemplate.from_template ("{content}")
+    ]
 )
 
-# result = code_chain({"language":"python", "task":"add two numbers"})
-
-# print(result)
-
-
-# Adding two chains together
-
-test_prompt = PromptTemplate(
-    template = "Write a test code for {code} in {language}",
-    input_variables = ["code", "language"]
+chain = LLMChain(
+    llm = chat,
+    prompt = prompt,
+    memory = memory, # optional if needs to give the previous data and store the reult
+    verbose = True
 )
 
-test_chain = LLMChain(
-    llm = llm,
-    prompt = test_prompt,
-    output_key = "test"
-)
+while True:
+    content = input(">>")
+    result = chain({"content":content})
 
-seq_chain = SequentialChain(
-    chains  = [code_chain, test_chain],
-    input_variables = ["language", "task"],
-    output_variables = ["test", "code"]
-)
+    print(result)
 
-# result = seq_chain({"language":"python", "task":"add two numbers"})
-
-result = seq_chain({"language":"python", "task":"add two numbers"})
-print(result)
-
-print("GENERATED CODE >>>>")
-print(result["code"])
-
-print("GENERATED TEST >>>>")
-print(result["test"])
