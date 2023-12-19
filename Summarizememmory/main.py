@@ -27,7 +27,7 @@ prompt = ChatPromptTemplate(
     input_variables = ["content", "messages"],
     messages = [
         MessagesPlaceholder(variable_name="messages"), #search for key "messages" to find the earlier messages
-        HumanMessagePromptTemplate.from_template ("{content}")
+        HumanMessagePromptTemplate.from_template ("{content}") # search for `content` in the input
     ]
 )
 
