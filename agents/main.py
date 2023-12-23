@@ -11,11 +11,16 @@ from tools.report import write_report_tool
 from langchain.schema import SystemMessage
 from langchain.memory import ConversationBufferMemory
 
+from handlers.chat_model_start_handler import ChatModelStartHandler
+
 
 
 load_dotenv()
 
-chat = ChatOpenAI()
+handler = ChatModelStartHandler()
+chat = ChatOpenAI(
+    callbacks = [handler]
+)
 
 tables = list_tables()
 prompt = ChatPromptTemplate(
@@ -64,7 +69,7 @@ agent_executor = AgentExecutor(
 
 
 # to test the html tool
-agent_executor("How many orders are there ? Write the result to an html report.")
+# agent_executor("How many orders are there ? Write the result to an html report.")
 
 # starting memory concept
 
