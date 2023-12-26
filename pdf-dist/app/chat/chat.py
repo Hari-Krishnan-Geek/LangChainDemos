@@ -18,6 +18,8 @@ from app.web.api import (
 import random
 from app.chat.score import random_component_by_choice
 
+from langfuse.model import CreateTrace
+
 
 
 
@@ -103,9 +105,18 @@ def build_chat(chat_args: ChatArgs):
     # )
 
 
+    trace = langfuse.trace(
+         CreateTrace(
+              id = chat_args.conversation_id,
+              metadata = chat_args.metadata
+         )
+    )
+
     return StreamingConversationalRetrievalChain.from_llm(
         llm = llm,
         condense_question_llm = condense_question_llm,
         retriever = retriever,
-        memory = memory
+        memory = memory,
+        #callbacks = [trace.getNewandler()],
+        # metadata = chat_args.metadata # will pass as metadata to tracable class
     )
